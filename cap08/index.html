@@ -1,0 +1,315 @@
+<!-- Arquivo: index.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>ElectroShop - Piloto LangGraph</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+    }
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #0f172a;
+      color: #f8fafc;
+    }
+    h1 {
+      text-align: center;
+      color: #38bdf8;
+      margin-bottom: 5px;
+    }
+    p.sub {
+      text-align: center;
+      color: #94a3b8;
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+    .painel-duplo {
+      display: flex;
+      gap: 20px;
+      max-width: 1100px;
+      margin: 0 auto;
+      height: 540px;
+    }
+    .coluna {
+      flex: 1;
+      background: #1e293b;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid #334155;
+    }
+    .cabecalho {
+      padding: 14px 18px;
+      font-weight: bold;
+      font-size: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .cab-cliente { background: #0284c7; color: white; }
+    .cab-gerente { background: #b45309; color: white; }
+    .chat-area {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .bolha {
+      padding: 12px 15px;
+      border-radius: 12px;
+      max-width: 85%;
+      line-height: 1.45;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+    .bolha-user {
+      background: #0284c7;
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 2px;
+    }
+    .bolha-ia {
+      background: #334155;
+      color: #f1f5f9;
+      align-self: flex-start;
+      border-bottom-left-radius: 2px;
+    }
+    .bolha-alerta {
+      background: #78350f;
+      border: 1px solid #f59e0b;
+      color: #fef3c7;
+      align-self: center;
+      max-width: 95%;
+    }
+    .barra-input {
+      display: flex;
+      padding: 12px;
+      background: #0f172a;
+      border-top: 1px solid #334155;
+      gap: 8px;
+    }
+    input[type="text"], input[type="password"] {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid #475569;
+      background: #1e293b;
+      color: white;
+      outline: none;
+    }
+    button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .btn-enviar { background: #38bdf8; color: #0f172a; }
+    .btn-aprovar {
+      background: #22c55e;
+      color: white;
+      width: 48%;
+      padding: 12px;
+    }
+    .btn-rejeitar {
+      background: #ef4444;
+      color: white;
+      width: 48%;
+      padding: 12px;
+    }
+    .card-pendencia {
+      background: #0f172a;
+      border: 2px dashed #f59e0b;
+      border-radius: 10px;
+      padding: 18px;
+      margin-top: 10px;
+    }
+    .dicas {
+      font-size: 12px;
+      color: #94a3b8;
+      padding: 8px 15px;
+      background: #0f172a;
+      border-top: 1px solid #334155;
+    }
+  </style>
+</head>
+<body>
+  <h1>CentralIA ElectroShop — Laboratório LangGraph</h1>
+  <p class="sub">
+    Piloto com RAG, Tools, SQLite e Aprovação Humana (Interrupt)
+  </p>
+
+  <div class="painel-duplo">
+    <div class="coluna">
+      <div class="cabecalho cab-cliente">
+        <span>Chat do Cliente</span>
+        <span style="font-size: 12px; font-weight: normal;">
+          Sessão:
+          <input id="threadId" value="web_cliente_01"
+                 style="width:110px; padding:3px 6px;">
+        </span>
+      </div>
+      <div class="chat-area" id="caixaChat">
+        <div class="bolha bolha-ia">
+          Olá! Sou o assistente da ElectroShop. Posso tirar dúvidas
+          sobre garantia e frete (RAG), consultar pedidos (PED-101,
+          PED-102, PED-103) ou processar reembolsos.
+        </div>
+      </div>
+      <div class="dicas">
+        <b>Teste 1:</b> "Qual o prazo de garantia?" |
+        <b>Teste 2:</b> "Reembolso do PED-101" |
+        <b>Teste 3:</b> "Reembolso do PED-102 porque atrasou"
+      </div>
+      <div class="barra-input">
+        <input type="text" id="campoMensagem"
+               placeholder="Digite sua mensagem..."
+               onkeypress="if(event.key==='Enter') enviarMensagem()">
+        <button class="btn-enviar" onclick="enviarMensagem()">
+          Enviar
+        </button>
+      </div>
+    </div>
+
+    <div class="coluna">
+      <div class="cabecalho cab-gerente">
+        <span>Painel do Gerente (HITL)</span>
+        <input id="managerToken" type="password"
+               value="token-gerente-demo-123"
+               style="width:140px; padding:3px 6px; font-size:12px;">
+      </div>
+      <div class="chat-area" id="painelGerente">
+        <p style="color:#94a3b8; text-align:center; margin-top:60px;">
+          Nenhuma pausa ativa pelo <code>interrupt()</code>.<br>
+          Peça o reembolso do <b>PED-102</b> (R$ 4.800,00) ao lado.
+        </p>
+      </div>
+    </div>
+  </div>
+
+<script>
+  function escapeHtml(texto) {
+    const div = document.createElement("div");
+    div.textContent = String(texto ?? "");
+    return div.innerHTML;
+  }
+
+  async function enviarMensagem() {
+    const input = document.getElementById("campoMensagem");
+    const campoThread = document.getElementById("threadId");
+    const threadId = campoThread.value.trim() || "web_cliente_01";
+    const texto = input.value.trim();
+    if (!texto) return;
+
+    adicionarBolha(texto, "bolha-user");
+    input.value = "";
+
+    const resp = await fetch("/conversar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        thread_id: threadId,
+        mensagem: texto,
+      }),
+    });
+    const dados = await resp.json();
+    processarRetornoDoServidor(dados, threadId);
+  }
+
+  async function decidirReembolso(threadId, decisao) {
+    const tokenInput = document.getElementById("managerToken");
+    const managerToken = tokenInput ? tokenInput.value.trim() : "";
+    const resp = await fetch("/aprovar", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Manager-Token": managerToken,
+      },
+      body: JSON.stringify({
+        thread_id: threadId,
+        decisao: decisao,
+      }),
+    });
+    const dados = await resp.json();
+    const painel = document.getElementById("painelGerente");
+    const decSegura = escapeHtml(decisao.toUpperCase());
+    painel.innerHTML = `
+      <p style="color:#22c55e; text-align:center; margin-top:60px;">
+        Decisão (${decSegura}) enviada via Command(resume=...).<br>
+        O grafo retomou do ponto onde estava pausado.
+      </p>`;
+    processarRetornoDoServidor(dados, threadId);
+  }
+
+  function processarRetornoDoServidor(dados, threadId) {
+    if (dados.status === "AGUARDANDO_APROVACAO_GERENTE") {
+      adicionarBolha(dados.resposta, "bolha-alerta");
+      const p = dados.pendencia;
+      const tSeg = escapeHtml(threadId);
+      const codSeg = escapeHtml(p.codigo_pedido);
+      const cliSeg = escapeHtml(p.cliente);
+      const prodSeg = escapeHtml(p.produto);
+      const motSeg = escapeHtml(p.motivo_cliente);
+      const pergSeg = escapeHtml(p.pergunta);
+      const valFmt = Number(p.valor || 0).toFixed(2);
+
+      const painel = document.getElementById("painelGerente");
+      painel.innerHTML = `
+        <div class="card-pendencia">
+          <h3 style="margin-top:0; color:#f59e0b;">
+            ${escapeHtml(p.aviso)}
+          </h3>
+          <p><b>Sessão (thread_id):</b> ${tSeg}</p>
+          <p><b>Código do Pedido:</b> ${codSeg}</p>
+          <p><b>Cliente:</b> ${cliSeg}</p>
+          <p><b>Produto:</b> ${prodSeg}</p>
+          <p><b>Valor do Estorno:</b>
+            <span style="color:#f87171; font-weight:bold;">
+              R$ ${valFmt}
+            </span>
+          </p>
+          <p><b>Motivo Alegado:</b> "${motSeg}"</p>
+          <hr style="border-color:#334155; margin: 15px 0;">
+          <p style="font-weight:bold;">${pergSeg}</p>
+          <div id="botoesAcao"
+               style="display:flex; justify-content:space-between;
+                      margin-top:15px;">
+          </div>
+        </div>
+      `;
+      const box = document.getElementById("botoesAcao");
+      const bSim = document.createElement("button");
+      bSim.className = "btn-aprovar";
+      bSim.textContent = "APROVAR ESTORNO";
+      bSim.onclick = () => decidirReembolso(threadId, "aprovado");
+
+      const bNao = document.createElement("button");
+      bNao.className = "btn-rejeitar";
+      bNao.textContent = "REJEITAR";
+      bNao.onclick = () => decidirReembolso(threadId, "rejeitado");
+
+      box.appendChild(bSim);
+      box.appendChild(bNao);
+    } else {
+      adicionarBolha(dados.resposta, "bolha-ia");
+    }
+  }
+
+  function adicionarBolha(texto, classe) {
+    const caixa = document.getElementById("caixaChat");
+    const div = document.createElement("div");
+    div.className = "bolha " + classe;
+    div.textContent = texto;
+    caixa.appendChild(div);
+    caixa.scrollTop = caixa.scrollHeight;
+  }
+</script>
+</body>
+</html>

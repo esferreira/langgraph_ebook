@@ -1,0 +1,23 @@
+# Bytecode e caches do Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+
+# Variáveis de ambiente e segredos locais
+.env
+
+# Bancos de dados locais e checkpoints SQLite / ChromaDB
+*.db
+*.sqlite
+*.sqlite3
+banco_vetorial_chroma/
+dados_persistentes/
+
+# Cache de testes
+.pytest_cache/
+

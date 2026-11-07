@@ -1,0 +1,9 @@
+# Arquivo: .dockerignore
+.venv/
+__pycache__/
+*.pyc
+*.sqlite
+*.sqlite-journal
+*.db
+.env
+.git/

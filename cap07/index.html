@@ -1,0 +1,142 @@
+<!-- Arquivo: index.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Portal da Empresa - Chat com LangGraph</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            padding-top: 40px;
+        }
+        .chat-container {
+            width: 420px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .chat-header {
+            background: #1a73e8;
+            color: white;
+            padding: 15px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .chat-box {
+            height: 350px;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #fafafa;
+        }
+        .msg {
+            padding: 10px 14px;
+            border-radius: 15px;
+            max-width: 78%;
+            line-height: 1.4;
+            font-size: 14px;
+        }
+        .msg-user {
+            background: #1a73e8;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+        .msg-bot {
+            background: #e9ecef;
+            color: #333;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+        .chat-input {
+            display: flex;
+            border-top: 1px solid #ddd;
+            padding: 10px;
+            background: white;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            outline: none;
+        }
+        .chat-input button {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            margin-left: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">Assistente Virtual TechBrasil</div>
+    <div class="chat-box" id="caixaMensagens">
+        <div class="msg msg-bot">
+            Olá! Sou o assistente TechBrasil. Como posso ajudar?
+        </div>
+    </div>
+    <div class="chat-input">
+        <input type="text" id="campoTexto"
+               placeholder="Digite sua mensagem..."
+               onkeypress="if(event.key === 'Enter') enviarMensagem()">
+        <button onclick="enviarMensagem()">Enviar</button>
+    </div>
+</div>
+
+<script>
+    const TOKEN_SESSAO_SIMULADO = "sessao_demo_ecio";
+    const URL_API = "http://localhost:8000/chat/web";
+
+    async function enviarMensagem() {
+        const input = document.getElementById("campoTexto");
+        const texto = input.value.trim();
+        if (!texto) return;
+
+        adicionarBolhaNaTela(texto, "msg-user");
+        input.value = "";
+
+        try {
+            const respostaHttp = await fetch(URL_API, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Token-Sessao": TOKEN_SESSAO_SIMULADO
+                },
+                body: JSON.stringify({ mensagem: texto })
+            });
+
+            const dados = await respostaHttp.json();
+            adicionarBolhaNaTela(dados.resposta, "msg-bot");
+        } catch (erro) {
+            adicionarBolhaNaTela(
+                "Erro ao conectar com o servidor LangGraph.",
+                "msg-bot"
+            );
+        }
+    }
+
+    function adicionarBolhaNaTela(texto, classeCss) {
+        const caixa = document.getElementById("caixaMensagens");
+        const div = document.createElement("div");
+        div.className = "msg " + classeCss;
+        div.textContent = texto;
+        caixa.appendChild(div);
+        caixa.scrollTop = caixa.scrollHeight;
+    }
+</script>
+
+</body>
+</html>
